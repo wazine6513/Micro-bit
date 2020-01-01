@@ -1,0 +1,51 @@
+let AccA = 0
+let Cal = 0
+let AccB = 0
+let jumpC = 0
+let Weight = 0
+let Flag = 0
+input.onButtonPressed(Button.A, function () {
+    Flag = 1
+    basic.showString("S")
+    jumpC = 0
+})
+input.onButtonPressed(Button.B, function () {
+    Flag = 0
+    basic.showNumber(jumpC)
+    radio.sendValue("jumpC", jumpC)
+    serial.writeString("Please input your weight in kg")
+    serial.writeLine("")
+})
+serial.onDataReceived(serial.delimiters(Delimiters.Fullstop), function () {
+    Weight = parseFloat(serial.readLine().substr(0, 2))
+    Cal = Weight / 60 * jumpC
+    serial.writeLine("")
+    serial.writeString("Your weight is " + Weight + "kg")
+    serial.writeLine("")
+    serial.writeString("Your total jump counts = " + jumpC)
+    serial.writeLine("")
+    serial.writeString("Your calories burned is " + Cal + "cal")
+})
+radio.setGroup(16)
+jumpC = 0
+Flag = 0
+input.setAccelerometerRange(AcceleratorRange.TwoG)
+basic.forever(function () {
+    if (Flag == 1) {
+        AccB = input.acceleration(Dimension.Strength)
+        control.waitMicros(50000)
+        AccA = input.acceleration(Dimension.Strength)
+        if (AccA - AccB < -255) {
+            jumpC += 1
+            basic.showLeds(`
+                . . # . .
+                . # # # .
+                # . # . #
+                . . # . .
+                . . # . .
+                `)
+            basic.pause(100)
+            basic.clearScreen()
+        }
+    }
+})
